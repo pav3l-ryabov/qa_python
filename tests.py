@@ -1,24 +1,61 @@
+import pytest
 from main import BooksCollector
 
-# класс TestBooksCollector объединяет набор тестов, которыми мы покрываем наше приложение BooksCollector
-# обязательно указывать префикс Test
+
 class TestBooksCollector:
 
-    # пример теста:
-    # обязательно указывать префикс test_
-    # дальше идет название метода, который тестируем add_new_book_
-    # затем, что тестируем add_two_books - добавление двух книг
-    def test_add_new_book_add_two_books(self):
-        # создаем экземпляр (объект) класса BooksCollector
+    def test_add_new_book(self):
         collector = BooksCollector()
-
-        # добавляем две книги
         collector.add_new_book('Гордость и предубеждение и зомби')
-        collector.add_new_book('Что делать, если ваш кот хочет вас убить')
+        assert collector.get_book_genre('Гордость и предубеждение и зомби') == ''
 
-        # проверяем, что добавилось именно две
-        # словарь books_rating, который нам возвращает метод get_books_rating, имеет длину 2
-        assert len(collector.get_books_rating()) == 2
+    def test_set_book_genre(self):
+        collector = BooksCollector()
+        collector.add_new_book('Гордость и предубеждение и зомби')
+        collector.set_book_genre('Гордость и предубеждение и зомби', 'Фантастика')
+        assert collector.get_book_genre('Гордость и предубеждение и зомби') == 'Фантастика'
 
-    # напиши свои тесты ниже
-    # чтобы тесты были независимыми в каждом из них создавай отдельный экземпляр класса BooksCollector()
+    def test_get_books_with_specific_genre(self, book_with_genre):
+        assert book_with_genre.get_books_with_specific_genre('Фантастика') == ['Гордость и предубеждение и зомби']
+
+    def test_get_books_genre(self, book_with_genre):
+        assert book_with_genre.get_books_genre() == {'Гордость и предубеждение и зомби': 'Фантастика'}
+
+    def test_get_books_for_children(self, book_with_genre):
+        assert book_with_genre.get_books_for_children() == ['Гордость и предубеждение и зомби']
+
+    def test_add_book_in_favorites(self, book_with_genre):
+        book_with_genre.add_book_in_favorites('Гордость и предубеждение и зомби')
+        assert book_with_genre.get_list_of_favorites_books() == ['Гордость и предубеждение и зомби']
+
+    def test_delete_book_from_favorites(self, book_with_genre):
+        book_with_genre.add_book_in_favorites('Гордость и предубеждение и зомби')
+        book_with_genre.delete_book_from_favorites('Гордость и предубеждение и зомби')
+        assert book_with_genre.get_list_of_favorites_books() == []
+
+    def test_add_duplicate_book(self, book_with_genre):
+        book_with_genre.add_new_book('Гордость и предубеждение и зомби')
+        assert len(book_with_genre.get_books_genre()) == 1
+
+    @pytest.mark.parametrize("book_name, expected_result",
+    [
+        ('Война и мир', True),
+        ('1984', True),
+        ('A', True)
+    ]
+                             )
+    def test_add_new_book_with_valid_names(self,book_with_genre, book_name, expected_result):
+        book_with_genre.add_new_book(book_name)
+        books = book_with_genre.get_books_genre()
+        assert (book_name in books) == expected_result
+
+    @pytest.mark.parametrize("book_name, expected_result",
+    [
+        ('', False),
+        ('A' * 41, False)
+    ]
+                             )
+    def test_add_new_book_with_valid_names(self,book_with_genre, book_name, expected_result):
+        book_with_genre.add_new_book(book_name)
+        books = book_with_genre.get_books_genre()
+        assert (book_name in books) == expected_result
